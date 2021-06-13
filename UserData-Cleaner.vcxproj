@@ -142,12 +142,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="UserData-Cleaner.cpp" />
+    <ClInclude Include="UserData-Cleaner/includes.h" />
+    <ClInclude Include="UserData-Cleaner/UserData-Cleaner.h" />
+    <ClInclude Include="UserData-Cleaner/Utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="includes.h" />
-    <ClInclude Include="UserData-Cleaner.h" />
-    <ClInclude Include="Utils.h" />
+    <ClCompile Include="UserData-Cleaner\UserData-Cleaner.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
