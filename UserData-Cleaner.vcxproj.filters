@@ -16,8 +16,17 @@
     <ClInclude Include="UserData-Cleaner/UserData-Cleaner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="UserData-Cleaner\UserData-Cleaner.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="UserData-Cleaner.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon1.ico" />
   </ItemGroup>
 </Project>
