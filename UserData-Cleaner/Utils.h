@@ -16,6 +16,7 @@ namespace Utils {
 	}
 
 	bool Trace(const wchar_t* fmt, ...) {
+#ifdef TRACE_LOGS
 		WORD m_currentConsoleAttr{};
 		CONSOLE_SCREEN_BUFFER_INFO csbi;
 		HANDLE conOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -38,6 +39,9 @@ namespace Utils {
 		bool returnvar = !!WriteConsole(conOutHandle, buf, static_cast<DWORD>(wcslen(buf)), nullptr, nullptr);
 		SetConsoleTextAttribute(conOutHandle, m_currentConsoleAttr);
 		return returnvar;
+#else
+		return true;
+#endif // TRACE
 	}
 
 	bool PrintError(const wchar_t* fmt, ...) {
@@ -115,8 +119,20 @@ namespace Utils {
 		exit(1);
 	}
 
+	std::wstring GetEnviromentVariable(std::wstring var) {
+		//rip getenv :(
+		//https://docs.microsoft.com/de-de/cpp/c-runtime-library/reference/dupenv-s-wdupenv-s
+		wchar_t* pValue;
+		size_t len;
+		errno_t err = _wdupenv_s(&pValue, &len, var.c_str());
+		if (err)
+			return L"Not Found";
+		return pValue;
+	}
+
 	std::wstring GetStringValueFromHKLM(const std::wstring& regSubKey, const std::wstring& regValue)
 	{
+		//modified version of https://stackoverflow.com/a/50821858
 		size_t bufferSize = 4096;
 		std::wstring valueBuf;
 		valueBuf.resize(bufferSize);
@@ -145,7 +161,73 @@ namespace Utils {
 		valueBuf.resize(static_cast<size_t>(cbData - 1));
 		return valueBuf;
 	}
+	bool DeleteRegistryKey(HKEY hKeyRoot, LPCWSTR lpSubKey)
+	{
+		//https://docs.microsoft.com/en-us/windows/win32/sysinfo/deleting-a-key-with-subkeys
+		LPCWSTR lpEnd;
+		LONG lResult;
+		DWORD dwSize;
+		TCHAR szName[MAX_PATH];
+		HKEY hKey;
+		FILETIME ftWrite;
 
+		lResult = RegDeleteKey(hKeyRoot, lpSubKey);
+
+		if (lResult == ERROR_SUCCESS)
+			return true;
+
+		lResult = RegOpenKeyEx(hKeyRoot, lpSubKey, 0, KEY_READ, &hKey);
+
+		if (lResult != ERROR_SUCCESS)
+		{
+			if (lResult == ERROR_FILE_NOT_FOUND)
+				return true;
+			else {
+				Utils::PrintError(L"Error opening key.\n");
+				return false;
+			}
+		}
+
+		lpEnd = lpSubKey + lstrlen(lpSubKey);
+
+		if (*(lpEnd - 1) != TEXT('\\'))
+		{
+			lpEnd = TEXT("\\");
+			lpEnd++;
+			lpEnd = TEXT("\0");
+		}
+
+		dwSize = MAX_PATH;
+		lResult = RegEnumKeyEx(hKey, 0, szName, &dwSize, NULL,
+			NULL, NULL, &ftWrite);
+
+		if (lResult == ERROR_SUCCESS)
+		{
+			do {
+
+				lpEnd = TEXT("\0");
+
+				if (!DeleteRegistryKey(hKeyRoot, lpSubKey)) {
+					break;
+				}
+
+				dwSize = MAX_PATH;
+
+				lResult = RegEnumKeyEx(hKey, 0, szName, &dwSize, NULL,
+					NULL, NULL, &ftWrite);
+
+			} while (lResult == ERROR_SUCCESS);
+		}
+
+		lpEnd--;
+		lpEnd = TEXT("\0");
+
+		RegCloseKey(hKey);
+
+		lResult = RegDeleteKey(hKeyRoot, lpSubKey);
+
+		return (lResult == ERROR_SUCCESS);
+	}
 	std::wstring GetSteamInstallPath() {
 		std::wstring regSubKey = L"SOFTWARE\\WOW6432Node\\Valve\\Steam\\";
 		std::wstring regValue(L"InstallPath");
@@ -159,6 +241,25 @@ namespace Utils {
 			std::cerr << e.what() << std::endl;
 		}
 		return valueFromRegistry;
+	}
+
+	void ClearRegistryVariable(HKEY hKey, std::wstring path, std::wstring variable) {
+		HKEY regKey = nullptr;
+		auto keyResult = RegOpenKeyEx(hKey, path.c_str(), 0, KEY_WRITE, &regKey);
+
+		if (keyResult != ERROR_SUCCESS)
+			RegCloseKey(regKey);
+
+		auto entry = L"";
+		auto setkeyResult = RegSetValueEx(regKey, variable.c_str(), 0, REG_SZ, (LPCBYTE)entry, (lstrlen(entry) + 1) * sizeof(WCHAR));
+		if (setkeyResult != ERROR_SUCCESS)
+			RegCloseKey(regKey);
+
+	}
+
+	bool RemoveRegistryFolder(HKEY hKey, std::wstring path) {
+		auto setkeyResult = RegDeleteKey(hKey, path.c_str());
+		return setkeyResult == ERROR_SUCCESS;
 	}
 
 	void KillProcess(std::string procName) {
