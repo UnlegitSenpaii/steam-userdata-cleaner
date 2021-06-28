@@ -161,20 +161,23 @@ namespace Utils {
 		valueBuf.resize(static_cast<size_t>(cbData - 1));
 		return valueBuf;
 	}
-	bool DeleteRegistryKey(HKEY hKeyRoot, LPCWSTR lpSubKey)
+	BOOL RegDelnodeRecurse(HKEY hKeyRoot, LPTSTR lpSubKey)
 	{
 		//https://docs.microsoft.com/en-us/windows/win32/sysinfo/deleting-a-key-with-subkeys
-		LPCWSTR lpEnd;
+		LPTSTR lpEnd;
 		LONG lResult;
 		DWORD dwSize;
 		TCHAR szName[MAX_PATH];
 		HKEY hKey;
 		FILETIME ftWrite;
 
+		// First, see if we can delete the key without having
+		// to recurse.
+
 		lResult = RegDeleteKey(hKeyRoot, lpSubKey);
 
 		if (lResult == ERROR_SUCCESS)
-			return true;
+			return TRUE;
 
 		lResult = RegOpenKeyEx(hKeyRoot, lpSubKey, 0, KEY_READ, &hKey);
 
@@ -188,14 +191,18 @@ namespace Utils {
 			}
 		}
 
+		// Check for an ending slash and add one if it is missing.
+
 		lpEnd = lpSubKey + lstrlen(lpSubKey);
 
 		if (*(lpEnd - 1) != TEXT('\\'))
 		{
-			lpEnd = TEXT("\\");
+			*lpEnd = TEXT('\\');
 			lpEnd++;
-			lpEnd = TEXT("\0");
+			*lpEnd = TEXT('\0');
 		}
+
+		// Enumerate the keys
 
 		dwSize = MAX_PATH;
 		lResult = RegEnumKeyEx(hKey, 0, szName, &dwSize, NULL,
@@ -205,9 +212,10 @@ namespace Utils {
 		{
 			do {
 
-				lpEnd = TEXT("\0");
+				*lpEnd = TEXT('\0');
+				StringCchCat(lpSubKey, MAX_PATH * 2, szName);
 
-				if (!DeleteRegistryKey(hKeyRoot, lpSubKey)) {
+				if (!RegDelnodeRecurse(hKeyRoot, lpSubKey)) {
 					break;
 				}
 
@@ -220,14 +228,28 @@ namespace Utils {
 		}
 
 		lpEnd--;
-		lpEnd = TEXT("\0");
+		*lpEnd = TEXT('\0');
 
 		RegCloseKey(hKey);
 
+		// Try again to delete the key.
+
 		lResult = RegDeleteKey(hKeyRoot, lpSubKey);
 
-		return (lResult == ERROR_SUCCESS);
+		if (lResult == ERROR_SUCCESS)
+			return TRUE;
+
+		return FALSE;
 	}
+	bool DeleteRegistryKey(HKEY hKeyRoot, LPCTSTR lpSubKey)
+	{
+		TCHAR szDelKey[MAX_PATH * 2];
+
+		StringCchCopy(szDelKey, MAX_PATH * 2, lpSubKey);
+		return RegDelnodeRecurse(hKeyRoot, szDelKey);
+
+	}
+
 	std::wstring GetSteamInstallPath() {
 		std::wstring regSubKey = L"SOFTWARE\\WOW6432Node\\Valve\\Steam\\";
 		std::wstring regValue(L"InstallPath");
