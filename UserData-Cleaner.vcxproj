@@ -75,8 +75,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>G:\ausput</OutDir>
-    <IntDir>G:\ausput\dumpsterfire</IntDir>
+    <OutDir>$(SolutionDir)\..\ausput</OutDir>
+    <IntDir>$(SolutionDir)\..\ausput\dumpsterfire</IntDir>
     <TargetName>UserData Cleaner</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

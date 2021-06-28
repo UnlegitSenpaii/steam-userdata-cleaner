@@ -7,16 +7,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="UserData-Cleaner/includes.h">
+    <ClInclude Include="UserData-Cleaner\resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UserData-Cleaner/Utils.h">
+    <ClInclude Include="UserData-Cleaner\includes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UserData-Cleaner/UserData-Cleaner.h">
+    <ClInclude Include="UserData-Cleaner\UserData-Cleaner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="UserData-Cleaner\Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -24,9 +24,9 @@
     <ClCompile Include="UserData-Cleaner\UserData-Cleaner.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="UserData-Cleaner.rc" />
+    <ResourceCompile Include="UserData-Cleaner\UserData-Cleaner.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="icon1.ico" />
+    <Image Include="UserData-Cleaner\icon1.ico" />
   </ItemGroup>
 </Project>
