@@ -16,7 +16,10 @@
     <ClInclude Include="UserData-Cleaner\UserData-Cleaner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UserData-Cleaner\Utils.h">
+    <ClInclude Include="UserData-Cleaner\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UserData-Cleaner\configuration.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,16 +1,11 @@
 #pragma once
-#include <iostream>
-#include <vector>
-#include <filesystem>
-#include <string>
-#include <exception>
-#include <windows.h>
-#include <stdio.h>
-#include <strsafe.h>
 #include <chrono>
+#include <cstdio>
+#include <exception>
+#include <filesystem>
+#include <iostream>
+#include <string>
+#include <strsafe.h>
+#include <vector>
+#include <Windows.h>
 namespace fs = std::filesystem;
-
-#ifdef _DEBUG
-#define TRACE_LOGS
-#endif
-
