@@ -15,6 +15,11 @@ int main() {
 	//get full path for config file
 	const fs::path fullConfigPath = absolute(fs::path(configFile));
 
+	//check if our folder exists.
+	if (!fs::exists(rootFolder)) {
+		fs::create_directory(rootFolder);
+	}
+
 	Utils::Print(
 		L"Welcome to UnlegitSenpaii's Steam User Data Remover\n\tfound on github.com/UnlegitSenpaii/steam-userdata-cleaner\n"
 	);
@@ -40,6 +45,11 @@ int main() {
 	Config::InitVariables();
 
 	Utils::Trace(L"TraceLogs: %d - Backups: %d\n", Config::doTraceLogs, Config::doBackups);
+
+	Utils::Trace(L"Ignored Accounts: \n");
+	for (auto& ignoredAcc : Config::ignoredAccounts) {
+		Utils::Trace(L"\t -> %s \n", ignoredAcc);
+	}
 
 	Utils::Print(L"Closing steam applications..\n");
 
@@ -95,9 +105,9 @@ int main() {
 		Utils::FatalError(L"There are no files that need to be deleted.\n");
 
 	Utils::Print(L"Found %d items to delete.\n", filesToDelete);
-
 	//todo: multi thread this and add a md5 check
 	if (Config::doBackups) {
+		Utils::Print(L"Backing up.. Do not close!\n");
 		fs::create_directory(rootFolder);
 		fs::create_directory(currentBackup);
 		fs::create_directory(profilePath);
@@ -106,7 +116,7 @@ int main() {
 		FileMgr::BackupCurrentSteamData(steamInstallPath, installPath);
 		FileMgr::BackupCurrentProfileData(userProfilePath, profilePath);
 	}
-
+	Utils::Print(L"Deleting.. Do not close!\n");
 	FileMgr::DelteCurrentData(steamInstallPath, userProfilePath);
 
 	Utils::Print(L"Successfully removed %d files / folders!\n", FileMgr::timesDeleted);

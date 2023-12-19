@@ -50,7 +50,7 @@ namespace FileMgr
 		L"Steam\\appcache"
 	};
 
-	inline std::vector<std::wstring> relevantProfileFolders = {L"Steam\\htmlcache"};
+	inline std::vector<std::wstring> relevantProfileFolders = { L"Steam\\htmlcache" };
 
 	inline DeletionList_t steamDeletionList = DeletionList_t(
 		{
@@ -63,12 +63,11 @@ namespace FileMgr
 		}, relevantSteamInstallFolders
 	);
 
-	inline DeletionList_t profileDeletionList = DeletionList_t({L"\\htmlcache"}, relevantProfileFolders);
+	inline DeletionList_t profileDeletionList = DeletionList_t({ L"\\htmlcache" }, relevantProfileFolders);
 
 	inline std::uintmax_t timesDeleted = 0;
 
 	inline bool IsRelevantDir(const std::wstring& dirname) {
-
 		const bool resultSteamInstall = std::any_of(
 			relevantSteamInstallFolders.begin(), relevantSteamInstallFolders.end(), [dirname](const std::wstring& str)
 			{
@@ -149,7 +148,14 @@ namespace FileMgr
 			}
 		);
 
-		return resultSteamList || resultProfileList;
+		const bool isIgnoredAccount = std::any_of(
+			Config::ignoredAccounts.begin(), Config::ignoredAccounts.end(), [path](const std::wstring& str)
+			{
+				return path.find(str) != std::wstring::npos;
+			}
+		);
+
+		return (resultSteamList || resultProfileList) && !isIgnoredAccount;
 	}
 
 	inline void PopulateSteamDeletionAmount(const std::wstring& steamInstallPath) {
