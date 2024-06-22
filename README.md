@@ -29,6 +29,11 @@ The following behavior can be changed using the config file:
 > ```
 > Default: 0
 
+    Delete-AppManifest
+> If this is set to 1 the cleaner will delete appmanifest files. Deleting those causes steam to forget that the game is installed.
+> 
+> Default: 0
+
 ### Compiling the Project
 
 Because the cleaner is a subproject of "redcore.cf", you have different compile options, and I'm too lazy to remove them. You can choose any compile setting, the one in the release tab is compiled with Release - NVIDIA Win32 - Visual Studio 2022.
