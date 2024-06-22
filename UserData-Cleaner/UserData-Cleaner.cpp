@@ -58,12 +58,16 @@ int main() {
 	Utils::KillProcess("gameoverlayui.exe");
 	Utils::KillProcess("SteamService.exe");
 
-	Sleep(250);
+	Sleep(500);
 
 	Utils::Print(L"Cleaning Registry..\n");
 	Utils::ClearRegistryVariable(HKEY_CURRENT_USER, L"SOFTWARE\\Valve\\Steam", L"LastGameNameUsed");
 	Utils::ClearRegistryVariable(HKEY_CURRENT_USER, L"SOFTWARE\\Valve\\Steam", L"AutoLoginUser");
+
 	if (!Utils::DeleteRegistryKey(HKEY_CURRENT_USER, L"SOFTWARE\\Valve\\Steam\\Users"))
+		Utils::PrintError(L"Failed to delete user list in registry!\n");
+
+	if (!Utils::DeleteRegistryKey(HKEY_CURRENT_USER, L"SOFTWARE\\Valve\\Steam\\ActiveProcess"))
 		Utils::PrintError(L"Failed to delete user list in registry!\n");
 
 	const std::wstring steamInstallPath = Utils::GetSteamInstallPath();
@@ -89,6 +93,10 @@ int main() {
 	Utils::Print(L"Populating deletion list\n");
 
 	FileMgr::steamDeletionList.PopulateDeletionList(steamInstallPath, steamInstallPath);
+
+	if(Config::deleteAppManifest)
+		FileMgr::steamDeletionList.targetList.push_back(L"\\steamapps\\appmanifest_");
+
 	FileMgr::profileDeletionList.PopulateDeletionList(userProfilePath, userProfilePath);
 
 	Utils::Trace(L"SteamDeletionList:\n");

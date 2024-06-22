@@ -43,14 +43,19 @@ struct DeletionList_t
 namespace FileMgr
 {
 	inline std::vector<std::wstring> relevantSteamInstallFolders = {
+		L"Steam",
 		L"Steam\\userdata",
 		L"Steam\\config",
 		L"Steam\\dumps",
 		L"Steam\\logs",
-		L"Steam\\appcache"
+		L"Steam\\appcache",
+		L"Steam\\steamapps"
 	};
 
-	inline std::vector<std::wstring> relevantProfileFolders = { L"Steam\\htmlcache" };
+	inline std::vector<std::wstring> relevantProfileFolders = {
+		L"Steam",
+		L"Steam\\htmlcache",
+	};
 
 	inline DeletionList_t steamDeletionList = DeletionList_t(
 		{
@@ -59,15 +64,29 @@ namespace FileMgr
 			L"\\appcache",
 			L"\\config\\config.vdf",
 			L"\\config\\loginusers.vdf",
-			L"\\config\\coplay_"
+			L"\\config\\remoteclients.vdf",
+			L"\\config\\coplay_",
+			L"\\config\\avatarcache",
+			L"\\update_hosts_cached.vdf",
+			L"\\GameOverlayUI.exe.log",
+			L"\\GameOverlayUI.exe.log.last",
+			L"\\GameOverlayRenderer.log",
+			L"\\.crash",
+			L"\\steamapps\\common\\Steam Controller Configs",
 		}, relevantSteamInstallFolders
 	);
 
-	inline DeletionList_t profileDeletionList = DeletionList_t({ L"\\htmlcache" }, relevantProfileFolders);
+	inline DeletionList_t profileDeletionList = DeletionList_t(
+		{ 
+			L"htmlcache",
+			L"local.vdf" 
+		}, relevantProfileFolders
+	);
 
 	inline std::uintmax_t timesDeleted = 0;
 
 	inline bool IsRelevantDir(const std::wstring& dirname) {
+
 		const bool resultSteamInstall = std::any_of(
 			relevantSteamInstallFolders.begin(), relevantSteamInstallFolders.end(), [dirname](const std::wstring& str)
 			{
@@ -89,6 +108,10 @@ namespace FileMgr
 		for (auto& curIteration : fs::directory_iterator(steamInstallPath)) {
 			if (!IsRelevantDir(curIteration.path()))
 				continue;
+
+			if (curIteration.path().wstring().find(L"Steam\\userdata") == std::wstring::npos && curIteration.path().wstring().find(L"Steam\\config") == std::wstring::npos)
+				continue;
+
 			if (is_directory(curIteration)) {
 				std::wstring fullPath = curIteration.path();
 				std::wstring subFolder = fullPath.substr(steamInstallPath.length());
@@ -132,8 +155,7 @@ namespace FileMgr
 			return false;
 
 		const auto& steamList = steamDeletionList.targetList;
-		const auto& profileList = profileDeletionList.targetList;
-
+		const auto& profileList = profileDeletionList.targetList; 
 		const bool resultSteamList = std::any_of(
 			steamList.begin(), steamList.end(), [path](const std::wstring& str)
 			{
@@ -162,19 +184,16 @@ namespace FileMgr
 		for (auto& curIteration : fs::directory_iterator(steamInstallPath)) {
 			std::wstring fullPath = curIteration.path();
 			std::wstring subFolder = fullPath.substr(steamInstallPath.length());
-			if (!IsRelevantDir(fullPath))
+			if (!IsRelevantDir(fullPath)) {
+				Utils::Trace(L"Skipping %s\n", fullPath.c_str());
 				continue;
-
-			if (is_directory(curIteration)) {
-				if (ListedForDeletion(fullPath)) {
-					steamDeletionList.stuffToDelete++;
-					PopulateSteamDeletionAmount(fullPath);
-				}
 			}
-			else {
-				if (ListedForDeletion(fullPath)) {
-					steamDeletionList.stuffToDelete++;
-				}
+
+			if (ListedForDeletion(fullPath)) {
+				steamDeletionList.stuffToDelete++;
+			}
+			if (is_directory(curIteration)) {
+				PopulateSteamDeletionAmount(fullPath);
 			}
 		}
 	}
@@ -183,19 +202,16 @@ namespace FileMgr
 		for (auto& curIteration : fs::directory_iterator(profilePath)) {
 			std::wstring fullPath = curIteration.path();
 			std::wstring subFolder = fullPath.substr(profilePath.length());
-			if (!IsRelevantDir(fullPath))
+			if (!IsRelevantDir(fullPath)) {
+				Utils::Trace(L"Skipping %s\n", fullPath.c_str());
 				continue;
-
-			if (is_directory(curIteration)) {
-				if (ListedForDeletion(fullPath)) {
-					profileDeletionList.stuffToDelete++;
-					PopulateProfileDeletionAmount(fullPath);
-				}
 			}
-			else {
-				if (ListedForDeletion(fullPath)) {
-					profileDeletionList.stuffToDelete++;
-				}
+
+			if (ListedForDeletion(fullPath)) {
+				profileDeletionList.stuffToDelete++;
+			}
+			if (is_directory(curIteration)) {
+				PopulateSteamDeletionAmount(fullPath);
 			}
 		}
 	}
@@ -214,8 +230,10 @@ namespace FileMgr
 		for (auto& curIteration : fs::directory_iterator(steamInstallPath)) {
 			std::wstring fullPath = curIteration.path();
 			std::wstring subFolder = fullPath.substr(steamInstallPath.length());
-			if (!IsRelevantDir(fullPath))
+			if (!IsRelevantDir(fullPath)) {
+				Utils::Trace(L"Skipping %s\n", fullPath.c_str());
 				continue;
+			}
 			if (is_directory(curIteration)) {
 				if (ListedForDeletion(fullPath)) {
 					const std::uintmax_t n = fs::remove_all(fullPath);
@@ -240,8 +258,12 @@ namespace FileMgr
 		for (auto& curIteration : fs::directory_iterator(profilePath)) {
 			std::wstring fullPath = curIteration.path();
 			std::wstring subFolder = fullPath.substr(profilePath.length());
-			if (!IsRelevantDir(fullPath))
+
+			if (!IsRelevantDir(fullPath)) { 
+				Utils::Trace(L"Skipping %s\n", fullPath.c_str());
 				continue;
+			}
+
 			if (is_directory(curIteration)) {
 				if (ListedForDeletion(fullPath)) {
 					const std::uintmax_t n = fs::remove_all(fullPath);
